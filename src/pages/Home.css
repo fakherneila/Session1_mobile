@@ -1,0 +1,119 @@
+/* ============ Styles de base (mobile-first) ============ */
+ion-content {
+  --padding-top: 16px;
+  --padding-bottom: 16px;
+}
+
+.buttons-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.buttons-container ion-button {
+  width: 100%;
+}
+
+ion-card {
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  margin-bottom: 16px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+ion-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+.spinner-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  gap: 12px;
+}
+
+ion-spinner {
+  width: 48px;
+  height: 48px;
+}
+
+/* ============ 1. PORTRAIT (≤ 500px) ============ */
+@media screen and (max-width: 500px) {
+  .buttons-container {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  ion-title {
+    font-size: 16px;
+  }
+
+  ion-card-content p {
+    font-size: 13px;
+    line-height: 1.4;
+  }
+
+  ion-button {
+    --padding-top: 12px;
+    --padding-bottom: 12px;
+    font-size: 14px;
+  }
+}
+
+/* ============ 2. TABLETTE (501 – 768px) ============ */
+@media screen and (min-width: 501px) and (max-width: 768px) {
+  .buttons-container {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .buttons-container ion-button {
+    flex: 1 1 45%;
+    max-width: 220px;
+  }
+
+  ion-title {
+    font-size: 20px;
+  }
+
+  ion-card-content p {
+    font-size: 15px;
+  }
+}
+
+/* ============ 3. LANDSCAPE / DESKTOP (≥ 769px) ============ */
+@media screen and (min-width: 769px) {
+  ion-content {
+    --padding-start: 10%;
+    --padding-end: 10%;
+  }
+
+  .buttons-container {
+    flex-direction: row;
+    justify-content: center;
+    gap: 20px;
+  }
+
+  .buttons-container ion-button {
+    flex: 0 1 200px;
+  }
+
+  ion-title {
+    font-size: 24px;
+  }
+
+  ion-card {
+    max-width: 700px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  ion-card-content p {
+    font-size: 16px;
+  }
+}

@@ -1,5 +1,7 @@
 {
   "name": "Session1",
-  "integrations": {},
+  "integrations": {
+    "capacitor": {}
+  },
   "type": "react"
 }
