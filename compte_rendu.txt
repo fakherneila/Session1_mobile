@@ -1,3 +1,4 @@
+Exercice1:
 1.1:
   1- ionic start -> pick either angular or react, it will make the project files shortly
   2- ionic cap add ios / ionic cap add android

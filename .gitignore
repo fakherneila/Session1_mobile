@@ -29,3 +29,12 @@ yarn-error.log*
 
 # Optional eslint cache
 .eslintcache
+dist/
+
+*.log
+
+.env
+
+
+android/app/build/
+ios/App/Pods/

@@ -1,119 +1,451 @@
-/* ============ Styles de base (mobile-first) ============ */
-ion-content {
-  --padding-top: 16px;
-  --padding-bottom: 16px;
+/* ============================================================
+   GEOLOCATION — MODERN UI
+   ============================================================ */
+
+:root {
+  --app-bg: #f4f6fb;
+  --card-bg: #ffffff;
+  --text-primary: #0f172a;
+  --text-muted: #64748b;
+  --accent: #4f46e5;
+  --accent-2: #7c3aed;
+  --success: #10b981;
+  --danger: #ef4444;
+  --border: #e2e8f0;
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06);
+  --shadow-md: 0 4px 16px rgba(15, 23, 42, 0.08);
+  --shadow-lg: 0 12px 32px rgba(79, 70, 229, 0.18);
+  --radius: 16px;
 }
 
+@media (prefers-color-scheme: dark) {
+  :root {
+    --app-bg: #0b1020;
+    --card-bg: #151a2e;
+    --text-primary: #e6e8f2;
+    --text-muted: #8b93b0;
+    --border: #232946;
+    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 12px 32px rgba(79, 70, 229, 0.35);
+  }
+}
+
+/* ============ Toolbar ============ */
+.app-toolbar {
+  --background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  --color: #ffffff;
+  --min-height: 64px;
+}
+
+.toolbar-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.toolbar-icon {
+  font-size: 22px;
+  opacity: 0.95;
+}
+
+/* ============ Content ============ */
+.app-content {
+  --background: var(--app-bg);
+}
+
+.page-wrapper {
+  padding: 20px 16px 40px;
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+/* ============ Status Bar ============ */
+.status-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 20px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-muted);
+  transition: all 0.3s ease;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #cbd5e1;
+  transition: background 0.3s ease;
+}
+
+.status-tracking {
+  border-color: rgba(16, 185, 129, 0.3);
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.08), rgba(16, 185, 129, 0.02));
+  color: var(--success);
+}
+
+.status-tracking .status-dot {
+  background: var(--success);
+  box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+  animation: pulse 1.6s infinite;
+}
+
+.status-text {
+  flex: 1;
+  color: var(--text-primary);
+}
+
+.status-tracking .status-text {
+  color: var(--success);
+  font-weight: 600;
+}
+
+.status-meta {
+  font-variant-numeric: tabular-nums;
+  font-size: 12px;
+  opacity: 0.9;
+}
+
+@keyframes pulse {
+  0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+  70% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+
+/* ============ Buttons ============ */
 .buttons-container {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
 
-.buttons-container ion-button {
-  width: 100%;
+ion-button {
+  --border-radius: 14px;
+  --padding-top: 16px;
+  --padding-bottom: 16px;
+  --box-shadow: var(--shadow-md);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  text-transform: none;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-ion-card {
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  margin-bottom: 16px;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+ion-button::part(native) {
+  transition: transform 0.15s ease, filter 0.2s ease;
 }
 
-ion-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+ion-button:not([disabled]):hover::part(native) {
+  transform: translateY(-2px);
+  filter: brightness(1.05);
 }
 
+ion-button:not([disabled]):active::part(native) {
+  transform: translateY(0);
+}
+
+.btn-primary {
+  --background: linear-gradient(135deg, #4f46e5, #6366f1);
+  --background-hover: linear-gradient(135deg, #4338ca, #4f46e5);
+}
+
+.btn-success {
+  --background: linear-gradient(135deg, #10b981, #059669);
+  --background-hover: linear-gradient(135deg, #059669, #047857);
+}
+
+.btn-danger {
+  --background: linear-gradient(135deg, #ef4444, #dc2626);
+  --background-hover: linear-gradient(135deg, #dc2626, #b91c1c);
+}
+
+ion-button[disabled] {
+  opacity: 0.45;
+  --box-shadow: none;
+}
+
+/* ============ Spinner ============ */
 .spinner-container {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 24px;
-  gap: 12px;
+  padding: 32px;
+  gap: 14px;
+  color: var(--text-muted);
+  font-size: 14px;
 }
 
 ion-spinner {
-  width: 48px;
-  height: 48px;
+  width: 44px;
+  height: 44px;
+  --color: var(--accent);
 }
 
-/* ============ 1. PORTRAIT (≤ 500px) ============ */
+/* ============ Data Card ============ */
+.data-card {
+  position: relative;
+  margin: 0 0 20px;
+  border-radius: var(--radius);
+  background: var(--card-bg);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  animation: slideUp 0.4s ease;
+}
+
+.card-accent {
+  height: 4px;
+  background: linear-gradient(90deg, #4f46e5, #7c3aed, #ec4899);
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.data-card ion-card-content {
+  padding: 20px;
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.card-header-icon {
+  font-size: 22px;
+  color: var(--accent);
+  background: rgba(79, 70, 229, 0.1);
+  padding: 8px;
+  border-radius: 10px;
+}
+
+.card-header h2 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+}
+
+/* ============ Coord Grid ============ */
+.coord-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.coord-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 14px;
+  background: var(--app-bg);
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.coord-item:hover {
+  transform: translateY(-2px);
+  border-color: var(--accent);
+}
+
+.coord-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.coord-value {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+}
+
+/* ============ Stats Row ============ */
+.stats-row {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px dashed var(--border);
+}
+
+.stat {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 10px;
+  background: linear-gradient(135deg, rgba(79, 70, 229, 0.06), rgba(124, 58, 237, 0.06));
+  border-radius: 12px;
+}
+
+.stat ion-icon {
+  font-size: 18px;
+  color: var(--accent);
+  margin-bottom: 2px;
+}
+
+.stat span {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.stat small {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* ============ Empty State ============ */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 48px 24px;
+  background: var(--card-bg);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  color: var(--text-muted);
+}
+
+.empty-icon {
+  font-size: 48px;
+  color: var(--accent);
+  opacity: 0.35;
+  margin-bottom: 12px;
+}
+
+.empty-state h3 {
+  margin: 0 0 6px;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.empty-state p {
+  margin: 0;
+  font-size: 13px;
+}
+
+/* ============ Error Card ============ */
+.error-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px;
+  border-radius: var(--radius);
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.08), rgba(239, 68, 68, 0.02));
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  color: var(--danger);
+  animation: slideUp 0.3s ease;
+}
+
+.error-icon {
+  font-size: 24px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.error-card h4 {
+  margin: 0 0 4px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.error-card p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-primary);
+  opacity: 0.85;
+  line-height: 1.4;
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+
+/* --- 1. PORTRAIT (≤ 500px) --- */
 @media screen and (max-width: 500px) {
-  .buttons-container {
-    flex-direction: column;
-    gap: 8px;
+  .page-wrapper {
+    padding: 16px 12px 32px;
   }
 
-  ion-title {
-    font-size: 16px;
+  .coord-grid {
+    grid-template-columns: 1fr;
   }
 
-  ion-card-content p {
-    font-size: 13px;
-    line-height: 1.4;
+  .coord-value {
+    font-size: 15px;
+  }
+
+  .status-bar {
+    padding: 8px 14px;
+    font-size: 12px;
   }
 
   ion-button {
-    --padding-top: 12px;
-    --padding-bottom: 12px;
+    --padding-top: 14px;
+    --padding-bottom: 14px;
     font-size: 14px;
   }
-}
 
-/* ============ 2. TABLETTE (501 – 768px) ============ */
-@media screen and (min-width: 501px) and (max-width: 768px) {
-  .buttons-container {
-    flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-
-  .buttons-container ion-button {
-    flex: 1 1 45%;
-    max-width: 220px;
-  }
-
-  ion-title {
-    font-size: 20px;
-  }
-
-  ion-card-content p {
+  .card-header h2 {
     font-size: 15px;
   }
 }
 
-/* ============ 3. LANDSCAPE / DESKTOP (≥ 769px) ============ */
+/* --- 2. TABLETTE (501 – 768px) --- */
+@media screen and (min-width: 501px) and (max-width: 768px) {
+  .page-wrapper {
+    padding: 24px 24px 48px;
+  }
+
+  .coord-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .coord-value {
+    font-size: 17px;
+  }
+}
+
+/* --- 3. DESKTOP (≥ 769px) --- */
 @media screen and (min-width: 769px) {
-  ion-content {
-    --padding-start: 10%;
-    --padding-end: 10%;
+  .page-wrapper {
+    max-width: 720px;
+    padding: 32px 32px 64px;
   }
 
-  .buttons-container {
-    flex-direction: row;
-    justify-content: center;
-    gap: 20px;
+  .coord-value {
+    font-size: 18px;
   }
 
-  .buttons-container ion-button {
-    flex: 0 1 200px;
-  }
-
-  ion-title {
-    font-size: 24px;
-  }
-
-  ion-card {
-    max-width: 700px;
-    margin-left: auto;
-    margin-right: auto;
-  }
-
-  ion-card-content p {
-    font-size: 16px;
+  .empty-state {
+    padding: 64px 32px;
   }
 }
