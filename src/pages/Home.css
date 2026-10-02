@@ -1,6 +1,4 @@
-/* ============================================================
-   GEOLOCATION — MODERN UI
-   ============================================================ */
+
 
 :root {
   --app-bg: #f4f6fb;
@@ -30,7 +28,7 @@
   }
 }
 
-/* ============ Toolbar ============ */
+
 .app-toolbar {
   --background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
   --color: #ffffff;
@@ -51,7 +49,7 @@
   opacity: 0.95;
 }
 
-/* ============ Content ============ */
+
 .app-content {
   --background: var(--app-bg);
 }
@@ -62,7 +60,7 @@
   margin: 0 auto;
 }
 
-/* ============ Status Bar ============ */
+
 .status-bar {
   display: flex;
   align-items: center;
@@ -121,7 +119,7 @@
   100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
 }
 
-/* ============ Buttons ============ */
+
 .buttons-container {
   display: flex;
   flex-direction: column;
@@ -173,7 +171,7 @@ ion-button[disabled] {
   --box-shadow: none;
 }
 
-/* ============ Spinner ============ */
+
 .spinner-container {
   display: flex;
   flex-direction: column;
@@ -191,7 +189,7 @@ ion-spinner {
   --color: var(--accent);
 }
 
-/* ============ Data Card ============ */
+
 .data-card {
   position: relative;
   margin: 0 0 20px;
@@ -240,7 +238,7 @@ ion-spinner {
   letter-spacing: -0.01em;
 }
 
-/* ============ Coord Grid ============ */
+
 .coord-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -279,7 +277,7 @@ ion-spinner {
   font-family: ui-monospace, "SF Mono", Menlo, monospace;
 }
 
-/* ============ Stats Row ============ */
+
 .stats-row {
   display: flex;
   gap: 12px;
@@ -319,7 +317,7 @@ ion-spinner {
   letter-spacing: 0.05em;
 }
 
-/* ============ Empty State ============ */
+
 .empty-state {
   display: flex;
   flex-direction: column;
@@ -352,7 +350,7 @@ ion-spinner {
   font-size: 13px;
 }
 
-/* ============ Error Card ============ */
+
 .error-card {
   display: flex;
   align-items: flex-start;
@@ -385,9 +383,7 @@ ion-spinner {
   line-height: 1.4;
 }
 
-/* ============================================================
-   RESPONSIVE
-   ============================================================ */
+/* ==== RESPONSIVE ==== */
 
 /* --- 1. PORTRAIT (≤ 500px) --- */
 @media screen and (max-width: 500px) {

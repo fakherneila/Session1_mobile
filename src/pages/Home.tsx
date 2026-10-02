@@ -45,7 +45,7 @@ const Home: React.FC = () => {
     accuracy: coords.accuracy,
   });
 
-  // ========== EX 3.2 ==========
+  //  EX 3.2 
   const getPosition = async () => {
     setIsLoading(true);
     setErrorMessage("");
@@ -88,7 +88,7 @@ const Home: React.FC = () => {
     }
   };
 
-  // ========== EX 3.3 — Démarrer ==========
+  // EX 3.3 — Démarrer 
   const startTracking = async () => {
     setErrorMessage("");
     setIsLoading(true);
@@ -146,7 +146,7 @@ const Home: React.FC = () => {
     }
   };
 
-  // ========== EX 3.3 — Arrêter ==========
+  //   EX 3.3 — Arrêter 
   const stopTracking = async () => {
     if (watchIdRef.current !== null) {
       await Geolocation.clearWatch({ id: watchIdRef.current });
@@ -164,7 +164,7 @@ const Home: React.FC = () => {
     setIsLoading(false);
   };
 
-  // ========== EX 3.5 — Cleanup ==========
+  //  EX 3.5 — Cleanup 
   useEffect(() => {
     return () => {
       if (watchIdRef.current !== null) {
@@ -197,7 +197,7 @@ const Home: React.FC = () => {
 
       <IonContent className="app-content" fullscreen>
         <div className="page-wrapper">
-          {/* ===== STATUS BAR ===== */}
+          {/* STATUS BAR  */}
           <div className={`status-bar ${isTracking ? "status-tracking" : ""}`}>
             <span className="status-dot" />
             <span className="status-text">
@@ -210,7 +210,7 @@ const Home: React.FC = () => {
             )}
           </div>
 
-          {/* ===== ACTIONS ===== */}
+          {/*  ACTIONS  */}
           <div className="buttons-container">
             <IonButton
               expand="block"
@@ -243,7 +243,7 @@ const Home: React.FC = () => {
             </IonButton>
           </div>
 
-          {/* ===== LOADING ===== */}
+          {/* LOADING */}
           {isLoading && (
             <div className="spinner-container">
               <IonSpinner name="crescent" />
@@ -251,7 +251,7 @@ const Home: React.FC = () => {
             </div>
           )}
 
-          {/* ===== POSITION CARD ===== */}
+          {/*  POSITION CARD  */}
           {position ? (
             <IonCard className="data-card">
               <div className="card-accent" />
@@ -323,7 +323,7 @@ const Home: React.FC = () => {
             )
           )}
 
-          {/* ===== ERROR CARD ===== */}
+          {/*  ERROR CARD */}
           {errorMessage && (
             <div className="error-card">
               <IonIcon icon={alertCircleOutline} className="error-icon" />
