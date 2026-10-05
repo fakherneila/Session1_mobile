@@ -1,0 +1,95 @@
+.history-content {
+  --background: var(--app-bg, #f4f6fb);
+}
+
+.history-list {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 16px;
+  background: transparent;
+}
+
+.history-item {
+  --background: var(--card-bg, #ffffff);
+  --border-color: var(--border, #e2e8f0);
+  --border-radius: 14px;
+  --padding-start: 16px;
+  --padding-end: 12px;
+  --inner-padding-end: 0;
+  margin-bottom: 10px;
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 14px;
+  box-shadow: var(--shadow-sm, 0 1px 2px rgba(15, 23, 42, 0.06));
+}
+
+.history-coordinates,
+.history-date {
+  display: flex;
+  flex-direction: column;
+}
+
+.history-coordinates {
+  gap: 5px;
+}
+
+.history-coordinates strong {
+  color: var(--text-primary, #0f172a);
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 14px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.history-coordinates span,
+.history-date span {
+  color: var(--text-muted, #64748b);
+  font-size: 12px;
+}
+
+.history-date {
+  align-items: flex-end;
+  gap: 4px;
+  margin-right: 8px;
+}
+
+.history-date strong {
+  color: var(--text-primary, #0f172a);
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+
+.history-empty-state {
+  display: flex;
+  min-height: 70vh;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+  color: var(--text-muted, #64748b);
+  text-align: center;
+}
+
+.history-empty-state ion-icon {
+  margin-bottom: 14px;
+  color: #4f46e5;
+  font-size: 56px;
+  opacity: 0.7;
+}
+
+.history-empty-state h2 {
+  margin: 0 0 8px;
+  color: var(--text-primary, #0f172a);
+  font-size: 20px;
+}
+
+.history-empty-state p {
+  margin: 0;
+  font-size: 14px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .history-item {
+    --background: #151a2e;
+    border-color: #232946;
+  }
+}

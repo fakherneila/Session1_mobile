@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
+import { useHistory } from "react-router-dom";
 import {
   IonContent,
   IonHeader,
@@ -23,10 +24,24 @@ import {
 } from "ionicons/icons";
 import { Capacitor } from "@capacitor/core";
 import { Geolocation } from "@capacitor/geolocation";
+import HistoryService from "../services/HistoryService";
 import "./Home.css";
 
+type PositionData = {
+  latitude: number;
+  longitude: number;
+  altitude: number | null;
+  accuracy: number | null;
+};
+
+type CoordinateData = Pick<
+  PositionData,
+  "latitude" | "longitude" | "altitude" | "accuracy"
+>;
+
 const Home: React.FC = () => {
-  const [position, setPosition] = useState<any>(null);
+  const history = useHistory();
+  const [position, setPosition] = useState<PositionData | null>(null);
   const [errorMessage, setErrorMessage] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isTracking, setIsTracking] = useState<boolean>(false);
@@ -36,22 +51,22 @@ const Home: React.FC = () => {
   const watchIdRef = useRef<string | null>(null);
   const webWatchIdRef = useRef<number | null>(null);
   const startTimeRef = useRef<number>(0);
-  const timerRef = useRef<any>(null);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const formatPosition = (coords: GeolocationCoordinates) => ({
+  const formatPosition = (coords: CoordinateData): PositionData => ({
     latitude: coords.latitude,
     longitude: coords.longitude,
     altitude: coords.altitude,
     accuracy: coords.accuracy,
   });
 
-  //  EX 3.2 
+  //  EX 3.2
   const getPosition = async () => {
     setIsLoading(true);
     setErrorMessage("");
 
     try {
-      let coords: GeolocationCoordinates;
+      let coords: CoordinateData;
 
       if (Capacitor.isNativePlatform()) {
         const perm = await Geolocation.requestPermissions();
@@ -62,7 +77,7 @@ const Home: React.FC = () => {
           enableHighAccuracy: true,
           timeout: 10000,
         });
-        coords = pos.coords as any;
+        coords = pos.coords;
       } else {
         if (!navigator.geolocation) {
           throw new Error(
@@ -81,14 +96,22 @@ const Home: React.FC = () => {
       }
 
       setPosition(formatPosition(coords));
-    } catch (err: any) {
-      setErrorMessage(err.message || "Erreur de géolocalisation");
+      await HistoryService.addEntry({
+        latitude: coords.latitude,
+        longitude: coords.longitude,
+        accuracy: coords.accuracy,
+        altitude: coords.altitude,
+      });
+    } catch (reason: unknown) {
+      setErrorMessage(
+        reason instanceof Error ? reason.message : "Erreur de géolocalisation",
+      );
     } finally {
       setIsLoading(false);
     }
   };
 
-  // EX 3.3 — Démarrer 
+  // EX 3.3 — Démarrer
   const startTracking = async () => {
     setErrorMessage("");
     setIsLoading(true);
@@ -112,7 +135,13 @@ const Home: React.FC = () => {
               return;
             }
             if (pos) {
-              setPosition(formatPosition(pos.coords as any));
+              setPosition(formatPosition(pos.coords));
+              void HistoryService.addEntry({
+                latitude: pos.coords.latitude,
+                longitude: pos.coords.longitude,
+                accuracy: pos.coords.accuracy,
+                altitude: pos.coords.altitude,
+              });
               setCount((c) => c + 1);
             }
           },
@@ -127,6 +156,12 @@ const Home: React.FC = () => {
         webWatchIdRef.current = navigator.geolocation.watchPosition(
           (pos) => {
             setPosition(formatPosition(pos.coords));
+            void HistoryService.addEntry({
+              latitude: pos.coords.latitude,
+              longitude: pos.coords.longitude,
+              accuracy: pos.coords.accuracy,
+              altitude: pos.coords.altitude,
+            });
             setCount((c) => c + 1);
           },
           (err) => setErrorMessage(err.message),
@@ -139,14 +174,18 @@ const Home: React.FC = () => {
       }, 1000);
 
       setIsLoading(false);
-    } catch (err: any) {
-      setErrorMessage(err.message || "Erreur lors du démarrage du suivi");
+    } catch (reason: unknown) {
+      setErrorMessage(
+        reason instanceof Error
+          ? reason.message
+          : "Erreur lors du démarrage du suivi",
+      );
       setIsLoading(false);
       setIsTracking(false);
     }
   };
 
-  //   EX 3.3 — Arrêter 
+  //   EX 3.3 — Arrêter
   const stopTracking = async () => {
     if (watchIdRef.current !== null) {
       await Geolocation.clearWatch({ id: watchIdRef.current });
@@ -164,7 +203,7 @@ const Home: React.FC = () => {
     setIsLoading(false);
   };
 
-  //  EX 3.5 — Cleanup 
+  //  EX 3.5 — Cleanup
   useEffect(() => {
     return () => {
       if (watchIdRef.current !== null) {
@@ -240,6 +279,20 @@ const Home: React.FC = () => {
             >
               <IonIcon slot="start" icon={stopCircleOutline} />
               Arrêter Suivi
+            </IonButton>
+
+            <IonButton expand="block" onClick={() => history.push("/map")}>
+              Ouvrir la Carte
+            </IonButton>
+
+            <IonButton
+              expand="block"
+              color="tertiary"
+              className="btn-history"
+              onClick={() => history.push("/history")}
+            >
+              <IonIcon slot="start" icon={timeOutline} />
+              Historique
             </IonButton>
           </div>
 
