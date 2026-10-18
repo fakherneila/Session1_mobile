@@ -25,7 +25,16 @@ import {
 import { Capacitor } from "@capacitor/core";
 import { Geolocation } from "@capacitor/geolocation";
 import HistoryService from "../services/HistoryService";
+import {
+  computeDistance,
+  DistanceResult,
+  formatBearing,
+  haversineDistance,
+  TARGET_PLACE,
+} from "../services/DistanceService";
 import "./Home.css";
+
+const INTERVAL_MS = 10 * 60 * 1000; // Set to 30 * 1000 temporarily to test, then restore to 10 * 60 * 1000
 
 type PositionData = {
   latitude: number;
@@ -47,11 +56,24 @@ const Home: React.FC = () => {
   const [isTracking, setIsTracking] = useState<boolean>(false);
   const [count, setCount] = useState<number>(0);
   const [duration, setDuration] = useState<number>(0);
+  const [distance, setDistance] = useState<DistanceResult | null>(null);
+  const [bearing, setBearing] = useState<string>("");
+  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">(
+    "idle",
+  );
+  const [trackDistance, setTrackDistance] = useState<number>(0);
+  const [trackPoints, setTrackPoints] = useState<number>(0);
 
   const watchIdRef = useRef<string | null>(null);
   const webWatchIdRef = useRef<number | null>(null);
   const startTimeRef = useRef<number>(0);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const latestPositionRef = useRef<PositionData | null>(null);
+  const previousPositionRef = useRef<PositionData | null>(null);
+  const saveStatusTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
 
   const formatPosition = (coords: CoordinateData): PositionData => ({
     latitude: coords.latitude,
@@ -59,6 +81,41 @@ const Home: React.FC = () => {
     altitude: coords.altitude,
     accuracy: coords.accuracy,
   });
+
+  const updateDistance = (coords: CoordinateData) => {
+    setDistance(computeDistance(coords.latitude, coords.longitude));
+    setBearing(formatBearing(coords.latitude, coords.longitude));
+  };
+
+  const handleTrackedPosition = (coords: CoordinateData) => {
+    const nextPosition = formatPosition(coords);
+    const previousPosition = previousPositionRef.current;
+
+    setPosition(nextPosition);
+    latestPositionRef.current = nextPosition;
+    updateDistance(coords);
+    if (previousPosition) {
+      setTrackDistance(
+        (currentDistance) =>
+          currentDistance +
+          haversineDistance(
+            previousPosition.latitude,
+            previousPosition.longitude,
+            nextPosition.latitude,
+            nextPosition.longitude,
+          ),
+      );
+      setTrackPoints((currentPoints) => currentPoints + 1);
+    }
+    previousPositionRef.current = nextPosition;
+    setCount((currentCount) => currentCount + 1);
+    void HistoryService.addEntry({
+      latitude: coords.latitude,
+      longitude: coords.longitude,
+      accuracy: coords.accuracy,
+      altitude: coords.altitude,
+    });
+  };
 
   //  EX 3.2
   const getPosition = async () => {
@@ -96,6 +153,7 @@ const Home: React.FC = () => {
       }
 
       setPosition(formatPosition(coords));
+      updateDistance(coords);
       await HistoryService.addEntry({
         latitude: coords.latitude,
         longitude: coords.longitude,
@@ -117,6 +175,11 @@ const Home: React.FC = () => {
     setIsLoading(true);
     setCount(0);
     setDuration(0);
+    setTrackDistance(0);
+    setTrackPoints(0);
+    setSaveStatus("idle");
+    latestPositionRef.current = null;
+    previousPositionRef.current = null;
     startTimeRef.current = Date.now();
     setIsTracking(true);
 
@@ -135,14 +198,7 @@ const Home: React.FC = () => {
               return;
             }
             if (pos) {
-              setPosition(formatPosition(pos.coords));
-              void HistoryService.addEntry({
-                latitude: pos.coords.latitude,
-                longitude: pos.coords.longitude,
-                accuracy: pos.coords.accuracy,
-                altitude: pos.coords.altitude,
-              });
-              setCount((c) => c + 1);
+              handleTrackedPosition(pos.coords);
             }
           },
         );
@@ -155,14 +211,7 @@ const Home: React.FC = () => {
 
         webWatchIdRef.current = navigator.geolocation.watchPosition(
           (pos) => {
-            setPosition(formatPosition(pos.coords));
-            void HistoryService.addEntry({
-              latitude: pos.coords.latitude,
-              longitude: pos.coords.longitude,
-              accuracy: pos.coords.accuracy,
-              altitude: pos.coords.altitude,
-            });
-            setCount((c) => c + 1);
+            handleTrackedPosition(pos.coords);
           },
           (err) => setErrorMessage(err.message),
           { enableHighAccuracy: true },
@@ -172,6 +221,31 @@ const Home: React.FC = () => {
       timerRef.current = setInterval(() => {
         setDuration(Math.floor((Date.now() - startTimeRef.current) / 1000));
       }, 1000);
+
+      intervalRef.current = setInterval(() => {
+        const latestPosition = latestPositionRef.current;
+        if (!latestPosition) {
+          return;
+        }
+
+        setSaveStatus("saving");
+        void HistoryService.addEntry({
+          latitude: latestPosition.latitude,
+          longitude: latestPosition.longitude,
+          accuracy: latestPosition.accuracy,
+          altitude: latestPosition.altitude,
+          source: "periodique",
+        }).then(() => {
+          setSaveStatus("saved");
+          if (saveStatusTimeoutRef.current) {
+            clearTimeout(saveStatusTimeoutRef.current);
+          }
+          saveStatusTimeoutRef.current = setTimeout(
+            () => setSaveStatus("idle"),
+            2000,
+          );
+        });
+      }, INTERVAL_MS);
 
       setIsLoading(false);
     } catch (reason: unknown) {
@@ -199,6 +273,10 @@ const Home: React.FC = () => {
       clearInterval(timerRef.current);
       timerRef.current = null;
     }
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
     setIsTracking(false);
     setIsLoading(false);
   };
@@ -214,6 +292,12 @@ const Home: React.FC = () => {
       }
       if (timerRef.current) {
         clearInterval(timerRef.current);
+      }
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+      if (saveStatusTimeoutRef.current) {
+        clearTimeout(saveStatusTimeoutRef.current);
       }
     };
   }, []);
@@ -245,6 +329,13 @@ const Home: React.FC = () => {
             {isTracking && (
               <span className="status-meta">
                 {count} pts · {duration}s
+              </span>
+            )}
+            {saveStatus !== "idle" && (
+              <span className="save-status-pill">
+                {saveStatus === "saving"
+                  ? "Enregistrement…"
+                  : "Position enregistrée"}
               </span>
             )}
           </div>
@@ -374,6 +465,58 @@ const Home: React.FC = () => {
                 </p>
               </div>
             )
+          )}
+
+          {isTracking && (
+            <IonCard className="data-card track-stats-card">
+              <div className="card-accent" />
+              <IonCardContent>
+                <div className="card-header">
+                  <IonIcon icon={layersOutline} className="card-header-icon" />
+                  <h2>Statistiques du suivi</h2>
+                </div>
+                <div className="track-stats">
+                  <span>
+                    Points enregistrés: <strong>{trackPoints}</strong>
+                  </span>
+                  <span>
+                    Distance totale:{" "}
+                    <strong>{(trackDistance / 1000).toFixed(2)} km</strong>
+                  </span>
+                  <span>
+                    Durée: <strong>{duration} s</strong>
+                  </span>
+                </div>
+              </IonCardContent>
+            </IonCard>
+          )}
+
+          {distance && (
+            <IonCard className="data-card distance-card">
+              <div className="card-accent" />
+              <IonCardContent>
+                <div className="card-header">
+                  <IonIcon
+                    icon={navigateOutline}
+                    className="card-header-icon"
+                  />
+                  <h2>Distance vers la cible</h2>
+                </div>
+
+                <div className="distance-target">
+                  <span>{TARGET_PLACE.label}</span>
+                  <small>
+                    {TARGET_PLACE.latitude.toFixed(6)},{" "}
+                    {TARGET_PLACE.longitude.toFixed(6)}
+                  </small>
+                </div>
+
+                <div className="distance-summary">
+                  <strong>{distance.formatted}</strong>
+                  <span>Direction: {bearing}</span>
+                </div>
+              </IonCardContent>
+            </IonCard>
           )}
 
           {/*  ERROR CARD */}

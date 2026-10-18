@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useHistory } from "react-router-dom";
 import {
   IonAlert,
@@ -16,12 +16,18 @@ import {
   IonPage,
   IonRefresher,
   IonRefresherContent,
+  IonSpinner,
+  IonToast,
   IonTitle,
   IonToolbar,
 } from "@ionic/react";
-import { locationOutline, trashOutline } from "ionicons/icons";
+import { locationOutline, syncOutline, trashOutline } from "ionicons/icons";
 import HistoryService, { HistoryEntry } from "../services/HistoryService";
+import { syncHistory } from "../services/FirebaseHistoryService";
+import { haversineDistance } from "../services/DistanceService";
 import "./HistoryPage.css";
+
+type HistoryFilter = "all" | "today" | "hour";
 
 const formatTime = (timestamp: number): string =>
   new Date(timestamp).toLocaleTimeString("fr-FR", {
@@ -36,10 +42,17 @@ const formatDate = (timestamp: number): string => {
     .padStart(2, "0")}/${date.getFullYear()}`;
 };
 
+const formatPreviousDistance = (meters: number): string =>
+  meters < 1000 ? `${meters.toFixed(1)} m` : `${(meters / 1000).toFixed(2)} km`;
+
 const HistoryPage: React.FC = () => {
   const history = useHistory();
   const [entries, setEntries] = useState<HistoryEntry[]>([]);
   const [isAlertOpen, setIsAlertOpen] = useState(false);
+  const [filter, setFilter] = useState<HistoryFilter>("all");
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncStatus, setSyncStatus] = useState<"local" | "synced">("local");
+  const [toastMessage, setToastMessage] = useState("");
 
   const loadHistory = async () => {
     setEntries(await HistoryService.getHistory());
@@ -49,9 +62,40 @@ const HistoryPage: React.FC = () => {
     void loadHistory();
   }, []);
 
+  const visibleEntries = useMemo(() => {
+    const now = Date.now();
+    return entries.filter((entry) => {
+      if (filter === "today") {
+        return (
+          new Date(entry.timestamp).toDateString() === new Date().toDateString()
+        );
+      }
+      if (filter === "hour") {
+        return now - entry.timestamp <= 60 * 60 * 1000;
+      }
+      return true;
+    });
+  }, [entries, filter]);
+
+  const getFilterCount = (selectedFilter: HistoryFilter): number => {
+    const now = Date.now();
+    return entries.filter((entry) => {
+      if (selectedFilter === "today") {
+        return (
+          new Date(entry.timestamp).toDateString() === new Date().toDateString()
+        );
+      }
+      if (selectedFilter === "hour") {
+        return now - entry.timestamp <= 60 * 60 * 1000;
+      }
+      return true;
+    }).length;
+  };
+
   const handleClearHistory = async () => {
     await HistoryService.clearHistory();
     setEntries([]);
+    setSyncStatus("local");
     setIsAlertOpen(false);
   };
 
@@ -60,6 +104,24 @@ const HistoryPage: React.FC = () => {
     setEntries((currentEntries) =>
       currentEntries.filter((entry) => entry.id !== id),
     );
+    setSyncStatus("local");
+  };
+
+  const handleSync = async () => {
+    setIsSyncing(true);
+    try {
+      const result = await syncHistory(entries);
+      if (result.failed > 0) {
+        setToastMessage("Échec de la synchronisation");
+        return;
+      }
+      setSyncStatus("synced");
+      setToastMessage(`${result.synced} positions synchronisées`);
+    } catch {
+      setToastMessage("Échec de la synchronisation");
+    } finally {
+      setIsSyncing(false);
+    }
   };
 
   const handleRefresh = async (event: CustomEvent) => {
@@ -83,6 +145,9 @@ const HistoryPage: React.FC = () => {
             <IonBackButton defaultHref="/home" />
           </IonButtons>
           <IonTitle>Historique</IonTitle>
+          <span className={`sync-status-pill ${syncStatus}`} slot="end">
+            {syncStatus === "synced" ? "Synchronisé" : "Local uniquement"}
+          </span>
           <IonButtons slot="end">
             <IonButton
               aria-label="Effacer l'historique"
@@ -100,7 +165,35 @@ const HistoryPage: React.FC = () => {
           <IonRefresherContent pullingText="Actualiser" />
         </IonRefresher>
 
-        {entries.length === 0 ? (
+        <div
+          className="history-filters"
+          role="group"
+          aria-label="Filtrer l'historique"
+        >
+          <button
+            className={filter === "all" ? "active" : ""}
+            onClick={() => setFilter("all")}
+            type="button"
+          >
+            Toutes ({getFilterCount("all")})
+          </button>
+          <button
+            className={filter === "today" ? "active" : ""}
+            onClick={() => setFilter("today")}
+            type="button"
+          >
+            Aujourd&apos;hui ({getFilterCount("today")})
+          </button>
+          <button
+            className={filter === "hour" ? "active" : ""}
+            onClick={() => setFilter("hour")}
+            type="button"
+          >
+            Dernière heure ({getFilterCount("hour")})
+          </button>
+        </div>
+
+        {visibleEntries.length === 0 ? (
           <div className="history-empty-state">
             <IonIcon icon={locationOutline} />
             <h2>Aucun historique</h2>
@@ -108,7 +201,7 @@ const HistoryPage: React.FC = () => {
           </div>
         ) : (
           <IonList className="history-list">
-            {entries.map((entry) => (
+            {visibleEntries.map((entry, index) => (
               <IonItemSliding key={entry.id}>
                 <IonItem
                   button
@@ -128,6 +221,21 @@ const HistoryPage: React.FC = () => {
                     <strong>{formatTime(entry.timestamp)}</strong>
                     <span>{formatDate(entry.timestamp)}</span>
                   </div>
+                  <div slot="end" className="history-previous-distance">
+                    <span>Distance préc.</span>
+                    <strong>
+                      {index < visibleEntries.length - 1
+                        ? formatPreviousDistance(
+                            haversineDistance(
+                              entry.latitude,
+                              entry.longitude,
+                              visibleEntries[index + 1].latitude,
+                              visibleEntries[index + 1].longitude,
+                            ),
+                          )
+                        : "—"}
+                    </strong>
+                  </div>
                 </IonItem>
                 <IonItemOptions side="end">
                   <IonItemOption
@@ -142,6 +250,21 @@ const HistoryPage: React.FC = () => {
             ))}
           </IonList>
         )}
+
+        <IonButton
+          className="sync-button"
+          color="secondary"
+          expand="block"
+          onClick={() => void handleSync()}
+          disabled={entries.length === 0 || isSyncing}
+        >
+          {isSyncing ? (
+            <IonSpinner name="crescent" />
+          ) : (
+            <IonIcon slot="start" icon={syncOutline} />
+          )}
+          Synchroniser Firebase
+        </IonButton>
       </IonContent>
 
       <IonAlert
@@ -161,6 +284,12 @@ const HistoryPage: React.FC = () => {
           },
         ]}
         onDidDismiss={() => setIsAlertOpen(false)}
+      />
+      <IonToast
+        isOpen={toastMessage.length > 0}
+        message={toastMessage}
+        duration={2500}
+        onDidDismiss={() => setToastMessage("")}
       />
     </IonPage>
   );

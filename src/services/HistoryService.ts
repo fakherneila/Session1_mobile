@@ -7,12 +7,13 @@ export interface HistoryEntry {
   accuracy: number | null;
   altitude: number | null;
   timestamp: number;
+  source?: string;
 }
 
 const HISTORY_KEY = "geo_history";
 const HISTORY_LIMIT = 100;
 
-type HistoryEntryInput = Omit<HistoryEntry, "id" | "timestamp">;
+export type HistoryEntryInput = Omit<HistoryEntry, "id" | "timestamp">;
 
 const createId = (): string => {
   if (
